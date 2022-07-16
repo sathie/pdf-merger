@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jul 16 16:30:52 2022
+Created on Sat Jul 16 21:35:15 2022
 
 @author: sarah
 """
 
 import sys, subprocess, os, platform
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import(
-    QWidget,
+from PyQt6.QtWidgets import (QWidget,
+    QPushButton, 
     QApplication,
     QVBoxLayout,
     QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QAbstractItemView,
     QFormLayout,
     QLineEdit,
-    QLabel,
-    QPushButton,
-    QFrame,
-    QListWidget,
-    QFileDialog,
-    QAbstractItemView,
-    QMessageBox
-)
-from PyQt5.QtCore import pyqtSlot
+    QMessageBox,
+    QFileDialog)
+from PyQt6.QtCore import Qt
+from PyQt6.QtCore import pyqtSlot
 from PyPDF2 import PdfMerger
 from PyPDF2.errors import PdfReadError
 
 class Window(QWidget):
+
     def __init__(self):
         super().__init__()
         self.initUI()
-        
+
+
     def initUI(self):
         self.setWindowTitle("PDF Merger")
         
@@ -47,46 +46,43 @@ class Window(QWidget):
         button_rmfiles = QPushButton('Remove files', self)
         button_rmfiles.clicked.connect(self.remove_file)
         button_layout.addWidget(button_rmfiles)
-        
         outer_layout.addLayout(button_layout)
         
         # List Widget
         self.list_widget = QListWidget()
-        self.list_widget.setDragDropMode(QAbstractItemView.InternalMove)
+        self.list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.list_widget.setToolTip('Drag & drop to reorder files')
         outer_layout.addWidget(self.list_widget)
-        label_hint = QLabel("Drag & drop to reorder items")
-        label_hint.setAlignment(Qt.AlignCenter)
-        label_hint.setStyleSheet("QLabel {font-style: italic;}")
-        outer_layout.addWidget(label_hint)
-        
-        # Separator line
-        sep = QFrame()
-        sep.setFrameShape(QFrame.HLine)
-        sep.setLineWidth(1)
-        outer_layout.addWidget(sep)
         
         # Metadata form
         form_layout = QFormLayout()
         label_metadata = QLabel("Metadata")
-        label_metadata.setAlignment(Qt.AlignCenter)
+        label_metadata.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label_metadata.setStyleSheet("QLabel {font-size: 15px; font-weight: bold;}")
         form_layout.addRow(label_metadata)
         
         self.entry_title = QLineEdit(self)
+        self.entry_title.setToolTip("Set PDF metadata")
         self.entry_author = QLineEdit(self)
+        self.entry_author.setToolTip("Set PDF metadata")
         form_layout.addRow("Title:", self.entry_title)
         form_layout.addRow("Author:", self.entry_author)
         
         outer_layout.addLayout(form_layout)
         
         # Merge Button
+        merge_layout = QHBoxLayout()
         button_merge = QPushButton("Merge files", self)
         button_merge.setStyleSheet("QPushButton {font-size: 14px;}")
         button_merge.clicked.connect(self.merge_files)
-        outer_layout.addWidget(button_merge)
-        button_merge.adjustSize()
+        merge_layout.addStretch()
+        merge_layout.addWidget(button_merge)
+        merge_layout.addStretch()
+        
+        outer_layout.addLayout(merge_layout)
         
         self.setLayout(outer_layout)
+        self.show()
         
     def pdf_merge(self, files, outfile):
         merger = PdfMerger()
@@ -127,7 +123,7 @@ class Window(QWidget):
         if files:
             for num, file in enumerate(files):
                 self.list_widget.addItem(file)
-    
+                
     @pyqtSlot()
     def remove_file(self):
         selected_items = self.list_widget.selectedItems()
@@ -169,10 +165,12 @@ class Window(QWidget):
                 os.startfile(outfile)
             else:
                 subprocess.call(("xdg-open", outfile))
-        
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
     window = Window()
-    window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
+
+
+if __name__ == '__main__':
+    main()
